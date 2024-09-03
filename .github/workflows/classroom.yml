@@ -1,0 +1,58 @@
+name: Autograding Tests
+'on':
+- push
+- workflow_dispatch
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Data Correctly Formatted
+      id: data-correctly-formatted
+      uses: education/autograding-io-grader@v1
+      with:
+        test-name: Data Correctly Formatted
+        setup-command: ''
+        command: python _tests/data_json_validator.py
+        input: ''
+        expected-output: Successfully passed format verification for demonstration
+          json files.
+        comparison-method: contains
+        timeout: 10
+    - name: Project Proposal Exists
+      id: project-proposal-exists
+      uses: education/autograding-io-grader@v1
+      with:
+        test-name: Project Proposal Exists
+        setup-command: ''
+        command: python _tests/pdf_proposal_validator.py
+        input: ''
+        expected-output: The project proposal exists.
+        comparison-method: contains
+        timeout: 10
+    - name: Paper Reviews Exist & Named Correctly
+      id: paper-reviews-exist-named-correctly
+      uses: education/autograding-io-grader@v1
+      with:
+        test-name: Paper Reviews Exist & Named Correctly
+        setup-command: ''
+        command: python _tests/pdf_reviews_validator.py
+        input: ''
+        expected-output: All paper reviews exist and are named correctly.
+        comparison-method: contains
+        timeout: 10
+    - name: Autograding Reporter
+      uses: education/autograding-grading-reporter@v1
+      env:
+        DATA-CORRECTLY-FORMATTED_RESULTS: "${{steps.data-correctly-formatted.outputs.result}}"
+        PROJECT-PROPOSAL-EXISTS_RESULTS: "${{steps.project-proposal-exists.outputs.result}}"
+        PAPER-REVIEWS-EXIST-NAMED-CORRECTLY_RESULTS: "${{steps.paper-reviews-exist-named-correctly.outputs.result}}"
+      with:
+        runners: data-correctly-formatted,project-proposal-exists,paper-reviews-exist-named-correctly
